@@ -19,6 +19,28 @@ pub fn fold_polynomial<E: Field>(poly: &[E], random_value: E) -> Vec<E> {
     folded_poly
 }
 
+/// given a set of evaluation points of a polynomial, use these points as merkle leaves
+/// and compute the corresponding merkle root
+pub fn get_merkle_root<E: Field>(evals: &[E]) -> E {
+    let mut leaves = evals.to_vec();
+    
+    while leaves.len() > 1 {
+        let mut next_level = Vec::with_capacity(leaves.len() / 2);
+        
+        for chunk in leaves.chunks(2) {
+            // hash two adjacent elements
+            // TODO: find a hash function to use
+            let node = chunk[0] + chunk[1];
+            next_level.push(node);
+        }
+        
+        leaves = next_level;
+    }
+    
+    // return the root (or zero if input was empty)
+    leaves.first().cloned().unwrap_or_else(|| E::zero())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -47,5 +69,21 @@ mod tests {
         assert_eq!(folded.len(), 2);
         assert_eq!(folded[0], F::from(11u32));
         assert_eq!(folded[1], F::from(23u32));
+    }
+
+    #[test]
+    fn test_merkle_root() {
+        // create a simple vector
+        let poly: Vec<F> = vec![
+            F::from(1u32), // x^0
+            F::from(2u32), // x^1 
+            F::from(3u32), // x^2
+            F::from(4u32), // x^3
+        ];
+
+        let merkle_root = get_merkle_root(&poly);
+
+        // result should be hash( hash(1 || 2) || hash(3 || 4))
+        assert_eq!(merkle_root, F::from(10u32));
     }
 }
