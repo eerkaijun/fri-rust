@@ -4,4 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ark-ff = "0.4"
+ark-bls12-381 = "0.5"
+ark-ff = "0.5"
+ark-test-curves = "0.5"
