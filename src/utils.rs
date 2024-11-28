@@ -23,20 +23,20 @@ pub fn fold_polynomial<E: Field>(poly: &[E], random_value: E) -> Vec<E> {
 /// and compute the corresponding merkle root
 pub fn get_merkle_root<E: Field>(evals: &[E]) -> E {
     let mut leaves = evals.to_vec();
-    
+
     while leaves.len() > 1 {
         let mut next_level = Vec::with_capacity(leaves.len() / 2);
-        
+
         for chunk in leaves.chunks(2) {
             // hash two adjacent elements
             // TODO: find a hash function to use
             let node = chunk[0] + chunk[1];
             next_level.push(node);
         }
-        
+
         leaves = next_level;
     }
-    
+
     // return the root (or zero if input was empty)
     leaves.first().cloned().unwrap_or_else(|| E::zero())
 }
@@ -52,15 +52,15 @@ mod tests {
         // create a simple polynomial with coefficients in Fp64
         let poly: Vec<F> = vec![
             F::from(1u32), // x^0
-            F::from(2u32), // x^1 
+            F::from(2u32), // x^1
             F::from(3u32), // x^2
             F::from(4u32), // x^3
         ];
-        
+
         let random_value = F::from(5u32);
-        
+
         let folded = fold_polynomial(&poly, random_value);
-        
+
         // for polynomial 1 + 2x + 3x^2 + 4x^3
         // even coefficients are [1, 3]
         // odd coefficients are [2, 4]
@@ -76,7 +76,7 @@ mod tests {
         // create a simple vector
         let poly: Vec<F> = vec![
             F::from(1u32), // x^0
-            F::from(2u32), // x^1 
+            F::from(2u32), // x^1
             F::from(3u32), // x^2
             F::from(4u32), // x^3
         ];
