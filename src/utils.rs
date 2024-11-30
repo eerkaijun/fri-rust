@@ -1,4 +1,49 @@
-use ark_ff::Field;
+use ark_ff::{Field, PrimeField};
+use ark_std::log2;
+
+/// helper function to evaluate polynomial at a point
+pub fn evaluate<E:PrimeField>(poly: &[E], point: E) -> E {
+    let mut value = E::ZERO;
+
+    for i in 0..poly.len() {
+        value += poly[i] * point.pow(&[i as u64]);
+    }
+
+    value
+}
+
+/// helper function to get the roots of unity of a polynomial
+pub fn get_omega<E:PrimeField>(coeffs: &[E]) -> E {
+    let mut coeffs = coeffs.to_vec();
+    let n = coeffs.len() - 1;
+    if !n.is_power_of_two() {
+        let num_coeffs = coeffs.len().checked_next_power_of_two().unwrap();
+        // pad the coefficients with zeros to the nearest power of two
+        for i in coeffs.len()..num_coeffs {
+            coeffs[i] = E::ZERO;
+        }
+    }
+
+    let m = coeffs.len();
+    let exp = log2(m);
+    let mut omega = E::TWO_ADIC_ROOT_OF_UNITY;
+    for _ in exp..E::TWO_ADICITY {
+        omega.square_in_place();
+    }
+    omega
+}
+
+/// given a set of coefficients of a polynomial, evaluate at roots of unity domain
+pub fn get_evaluation_points<E: PrimeField>(coeffs: &[E], blowup_factor: u64) -> Vec<E> {
+    let omega = get_omega(coeffs);
+    let evaluation_size = coeffs.len() as u64 * blowup_factor;
+    let mut evaluation_vec = vec![];
+    for i in 0..evaluation_size {
+        evaluation_vec.push(evaluate(coeffs, omega.pow([i])));
+    }
+
+    evaluation_vec
+}
 
 /// helper function to fold a polynomial into its odd and even component and
 /// add them back up by multiplying the odd component with a random value
