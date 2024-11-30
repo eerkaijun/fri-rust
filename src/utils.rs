@@ -1,4 +1,4 @@
-use ark_ff::{Field, PrimeField};
+use ark_ff::PrimeField;
 use ark_std::log2;
 
 /// helper function to evaluate polynomial at a point
@@ -47,7 +47,7 @@ pub fn get_evaluation_points<E: PrimeField>(coeffs: &[E], blowup_factor: u64) ->
 
 /// helper function to fold a polynomial into its odd and even component and
 /// add them back up by multiplying the odd component with a random value
-pub fn fold_polynomial<E: Field>(poly: &[E], random_value: E) -> Vec<E> {
+pub fn fold_polynomial<E: PrimeField>(poly: &[E], random_value: E) -> Vec<E> {
     // collect the odd coefficients
     let odd_poly: Vec<E> = poly.iter().skip(1).step_by(2).copied().collect();
 
@@ -66,7 +66,7 @@ pub fn fold_polynomial<E: Field>(poly: &[E], random_value: E) -> Vec<E> {
 
 /// given a set of evaluation points of a polynomial, use these points as merkle leaves
 /// and compute the corresponding merkle root
-pub fn get_merkle_root<E: Field>(evals: &[E]) -> E {
+pub fn get_merkle_root<E: PrimeField>(evals: &[E]) -> E {
     let mut leaves = evals.to_vec();
 
     while leaves.len() > 1 {
@@ -89,7 +89,7 @@ pub fn get_merkle_root<E: Field>(evals: &[E]) -> E {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ark_bls12_381::Fq2 as F;
+    use ark_bls12_381::Fr as F;
 
     // TODO: figure out how to not use BLS curve
     #[test]

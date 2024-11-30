@@ -1,5 +1,5 @@
 use crate::utils::fold_polynomial;
-use ark_ff::Field;
+use ark_ff::PrimeField;
 
 pub struct FRI {
     blowup_factor: u64,
@@ -12,7 +12,7 @@ impl FRI {
 
     pub fn prove() {}
 
-    pub fn commit<E: Field>(mut poly: Vec<E>, random_values: &[E]) {
+    pub fn commit<E: PrimeField>(mut poly: Vec<E>, random_values: &[E]) {
         // fold the polynomial until it's a constant polynomial
         let mut random_value_idx = 0;
         while poly.len() > 1 {
