@@ -2,7 +2,7 @@ use ark_ff::PrimeField;
 use ark_std::log2;
 
 /// helper function to evaluate polynomial at a point
-pub fn evaluate<E:PrimeField>(poly: &[E], point: E) -> E {
+pub fn evaluate<E: PrimeField>(poly: &[E], point: E) -> E {
     let mut value = E::ZERO;
 
     for i in 0..poly.len() {
@@ -13,7 +13,7 @@ pub fn evaluate<E:PrimeField>(poly: &[E], point: E) -> E {
 }
 
 /// helper function to get the roots of unity of a polynomial
-pub fn get_omega<E:PrimeField>(coeffs: &[E]) -> E {
+pub fn get_omega<E: PrimeField>(coeffs: &[E]) -> E {
     let mut coeffs = coeffs.to_vec();
     let n = coeffs.len() - 1;
     if !n.is_power_of_two() {
@@ -64,28 +64,6 @@ pub fn fold_polynomial<E: PrimeField>(poly: &[E], random_value: E) -> Vec<E> {
     folded_poly
 }
 
-/// given a set of evaluation points of a polynomial, use these points as merkle leaves
-/// and compute the corresponding merkle root
-pub fn get_merkle_root<E: PrimeField>(evals: &[E]) -> E {
-    let mut leaves = evals.to_vec();
-
-    while leaves.len() > 1 {
-        let mut next_level = Vec::with_capacity(leaves.len() / 2);
-
-        for chunk in leaves.chunks(2) {
-            // hash two adjacent elements
-            // TODO: find a hash function to use
-            let node = chunk[0] + chunk[1];
-            next_level.push(node);
-        }
-
-        leaves = next_level;
-    }
-
-    // return the root (or zero if input was empty)
-    leaves.first().cloned().unwrap_or_else(|| E::zero())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -122,21 +100,5 @@ mod tests {
         assert_eq!(folded.len(), 2);
         assert_eq!(folded[0], F::from(11u32));
         assert_eq!(folded[1], F::from(23u32));
-    }
-
-    #[test]
-    fn test_merkle_root() {
-        // create a simple vector
-        let poly: Vec<F> = vec![
-            F::from(1u32), // x^0
-            F::from(2u32), // x^1
-            F::from(3u32), // x^2
-            F::from(4u32), // x^3
-        ];
-
-        let merkle_root = get_merkle_root(&poly);
-
-        // result should be hash( hash(1 || 2) || hash(3 || 4))
-        assert_eq!(merkle_root, F::from(10u32));
     }
 }

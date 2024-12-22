@@ -1,4 +1,5 @@
-use crate::utils::{fold_polynomial, get_evaluation_points, get_merkle_root};
+use crate::merkle::MerkleTree;
+use crate::utils::{fold_polynomial, get_evaluation_points};
 use ark_ff::PrimeField;
 
 pub struct FRI {
@@ -21,12 +22,13 @@ impl FRI {
         while poly.len() > 1 {
             // at each round, commit to the merkle tree
             let eval_points = get_evaluation_points(&poly, self.blowup_factor);
-            let merkle_root = get_merkle_root(&eval_points);
+            let merkle_tree = MerkleTree::new(eval_points);
+            let merkle_root = merkle_tree.root;
             commitments.push(merkle_root);
 
             // TODO: better error handling if random_values length is insufficient
             poly = fold_polynomial(&poly, random_values[random_value_idx]);
-            random_value_idx += 1;            
+            random_value_idx += 1;
         }
 
         // the final commitment is a plaintext
