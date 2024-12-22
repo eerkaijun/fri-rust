@@ -90,10 +90,18 @@ pub fn get_merkle_root<E: PrimeField>(evals: &[E]) -> E {
 mod tests {
     use super::*;
     use ark_bls12_381::Fr as F;
+    use ark_ff::Field;
+    use ark_std::UniformRand;
 
-    // TODO: figure out how to not use BLS curve
+    // BLS12_381 curve uses a prime field
     #[test]
     fn test_fold_polynomial() {
+        // sanity check that F is a prime field
+        let mut rng = ark_std::test_rng();
+        let a = F::rand(&mut rng);
+        let modulus = F::MODULUS;
+        assert_eq!(a.pow(&modulus), a);
+
         // create a simple polynomial with coefficients in Fp64
         let poly: Vec<F> = vec![
             F::from(1u32), // x^0
