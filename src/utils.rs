@@ -63,6 +63,17 @@ pub fn fold_polynomial<E: PrimeField>(poly: &[E], random_value: E) -> Vec<E> {
     folded_poly
 }
 
+/// helper function to get the merkle root given the element and its sibling elements
+pub fn reconstruct_merkle_root<E: PrimeField>(element: E, merkle_path: Vec<E>) -> E {
+    let mut accumulator = element;
+    for sibling in merkle_path {
+        // hash two adjacent elements
+        // TODO: find a hash function to use
+        accumulator += sibling;
+    }
+    accumulator
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

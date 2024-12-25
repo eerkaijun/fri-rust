@@ -1,5 +1,7 @@
 use crate::merkle::{self, MerkleTree};
-use crate::utils::{evaluate, fold_polynomial, get_evaluation_points, get_omega};
+use crate::utils::{
+    evaluate, fold_polynomial, get_evaluation_points, get_omega, reconstruct_merkle_root,
+};
 use ark_ff::PrimeField;
 
 pub struct FRI<E: PrimeField> {
@@ -29,12 +31,15 @@ impl<E: PrimeField> Default for Prover<E> {
 pub struct Verifier<E: PrimeField> {
     // Random values that are sent to the prover during the commit phase (in reality this would be fiat shamir)
     random_values: Vec<E>,
+    // Commitments that are provided by the prover
+    commitments: Vec<E>,
 }
 
 impl<E: PrimeField> Default for Verifier<E> {
     fn default() -> Self {
         Self {
             random_values: Vec::new(),
+            commitments: Vec::new(),
         }
     }
 }
@@ -55,7 +60,7 @@ impl<E: PrimeField> FRI<E> {
         }
     }
 
-    pub fn commit(mut self, mut poly: Vec<E>, random_values: Vec<E>) -> Vec<E> {
+    pub fn commit(&mut self, mut poly: Vec<E>, random_values: Vec<E>) -> Vec<E> {
         // vector that stores the commitment at each round
         let mut commitments: Vec<E> = vec![];
 
@@ -99,12 +104,15 @@ impl<E: PrimeField> FRI<E> {
 
         // verifier stores the information needed
         // TODO: move this somewhere else
-        self.verifier = Verifier { random_values };
+        self.verifier = Verifier {
+            random_values,
+            commitments: commitments.clone(),
+        };
 
         commitments
     }
 
-    pub fn query(self, mut index: u64) {
+    pub fn query(&self, mut index: u64) -> Vec<RoundProof<E>> {
         // when verifier passes the prover with an evaluation point (a point within the roots of unity)
         // the prover sends the proof for each round to the verifier
         let mut proofs = vec![];
@@ -128,11 +136,15 @@ impl<E: PrimeField> FRI<E> {
             // TODO: double check what happen if index is odd number
             index = index / 2;
         }
+
+        proofs
     }
 
-    pub fn verify(self, proofs: Vec<RoundProof<E>>) -> bool {
+    // TODO: complete verification function
+    pub fn verify(&self, proofs: Vec<RoundProof<E>>) -> bool {
         for proof in proofs {
             // verify that the evaluation point matches the merkle commitment
+            let merkle_root = reconstruct_merkle_root(proof.f_g, proof.merkle_path);
 
             // verify that the evaluation point matches the previous round
         }
