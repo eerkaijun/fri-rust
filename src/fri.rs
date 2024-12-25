@@ -1,4 +1,4 @@
-use crate::merkle::{self, MerkleTree};
+use crate::merkle::MerkleTree;
 use crate::utils::{
     evaluate, fold_polynomial, get_evaluation_points, get_omega, reconstruct_merkle_root,
 };
@@ -142,11 +142,22 @@ impl<E: PrimeField> FRI<E> {
 
     // TODO: complete verification function
     pub fn verify(&self, proofs: Vec<RoundProof<E>>) -> bool {
+        let mut i = 0;
         for proof in proofs {
             // verify that the evaluation point matches the merkle commitment
             let merkle_root = reconstruct_merkle_root(proof.f_g, proof.merkle_path);
+            if merkle_root != self.verifier.commitments[i] {
+                return false;
+            }
 
             // verify that the evaluation point matches the previous round
+            if i == 0 {
+                continue;
+            } else {
+                // f1(x^2) = (x+r1)(f0(x))/2x + (r1-x)(f0(-x))/2(-x)
+            }
+
+            i += 1;
         }
 
         true
