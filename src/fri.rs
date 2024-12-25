@@ -1,5 +1,5 @@
 use crate::merkle::{self, MerkleTree};
-use crate::utils::{fold_polynomial, get_evaluation_points, get_omega};
+use crate::utils::{evaluate, fold_polynomial, get_evaluation_points, get_omega};
 use ark_ff::PrimeField;
 
 pub struct FRI<E: PrimeField> {
@@ -37,6 +37,13 @@ impl<E: PrimeField> Default for Verifier<E> {
             random_values: Vec::new(),
         }
     }
+}
+
+/// Each proof contains evaluation point at f(g), f(-g) and the merkle proof
+pub struct RoundProof<E: PrimeField> {
+    f_g: E,
+    f_negative_g: E,
+    merkle_path: Vec<E>,
 }
 
 impl<E: PrimeField> FRI<E> {
@@ -97,7 +104,39 @@ impl<E: PrimeField> FRI<E> {
         commitments
     }
 
-    pub fn query() {}
+    pub fn query(self, mut index: u64) {
+        // when verifier passes the prover with an evaluation point (a point within the roots of unity)
+        // the prover sends the proof for each round to the verifier
+        let mut proofs = vec![];
+        let mut omega = get_omega(&self.prover.polys[0]).pow([index]);
+        for (poly, merkle_tree) in self
+            .prover
+            .polys
+            .iter()
+            .zip(self.prover.merkle_trees.iter())
+        {
+            let proof = RoundProof {
+                f_g: evaluate(poly, omega),
+                f_negative_g: evaluate(poly, -omega),
+                merkle_path: merkle_tree.get_merkle_path(index),
+            };
 
-    pub fn verify() {}
+            proofs.push(proof);
+
+            // square the omega
+            omega = omega.pow([2]);
+            // TODO: double check what happen if index is odd number
+            index = index / 2;
+        }
+    }
+
+    pub fn verify(self, proofs: Vec<RoundProof<E>>) -> bool {
+        for proof in proofs {
+            // verify that the evaluation point matches the merkle commitment
+
+            // verify that the evaluation point matches the previous round
+        }
+
+        true
+    }
 }

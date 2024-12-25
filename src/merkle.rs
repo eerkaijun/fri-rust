@@ -36,13 +36,13 @@ impl<E: PrimeField> MerkleTree<E> {
     }
 
     // given the index of a leaf, return the sibling path of it to the root
-    pub fn get_merkle_path(self, index: u64) -> Vec<E> {
+    pub fn get_merkle_path(&self, index: u64) -> Vec<E> {
         let mut path = Vec::new();
         let mut current_index = index;
 
         let mut all_nodes = Vec::new();
-        all_nodes.push(self.leaves);
-        all_nodes.extend(self.intermediate_nodes);
+        all_nodes.push(self.leaves.clone());
+        all_nodes.extend(self.intermediate_nodes.clone());
 
         for level in &all_nodes {
             // get sibling index - if current_index is even, add 1; if odd, subtract 1
