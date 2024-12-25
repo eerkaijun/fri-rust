@@ -34,8 +34,7 @@ pub fn get_omega<E: PrimeField>(coeffs: &[E]) -> E {
 }
 
 /// given a set of coefficients of a polynomial, evaluate at roots of unity domain
-pub fn get_evaluation_points<E: PrimeField>(coeffs: &[E], blowup_factor: u64) -> Vec<E> {
-    let omega = get_omega(coeffs);
+pub fn get_evaluation_points<E: PrimeField>(coeffs: &[E], omega: E, blowup_factor: u64) -> Vec<E> {
     let evaluation_size = coeffs.len() as u64 * blowup_factor;
     let mut evaluation_vec = vec![];
     for i in 0..evaluation_size {
