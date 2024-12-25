@@ -13,7 +13,7 @@ impl FRI {
 
     pub fn prove() {}
 
-    pub fn commit<E: PrimeField>(self, mut poly: Vec<E>, random_values: &[E]) -> Vec<E> {
+    pub fn commit<E: PrimeField>(self, mut poly: Vec<E>, random_values: Vec<E>) -> Vec<E> {
         // vector that stores the commitment at each round
         let mut commitments: Vec<E> = vec![];
 
