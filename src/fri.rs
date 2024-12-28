@@ -112,7 +112,7 @@ impl<E: PrimeField> FRI<E> {
         commitments
     }
 
-    pub fn query(&self, mut index: u64) -> Vec<RoundProof<E>> {
+    pub fn query(&self, index: u64) -> Vec<RoundProof<E>> {
         // when verifier passes the prover with an evaluation point (a point within the roots of unity)
         // the prover sends the proof for each round to the verifier
         let mut proofs = vec![];
@@ -133,8 +133,7 @@ impl<E: PrimeField> FRI<E> {
 
             // square the omega
             omega = omega.pow([2]);
-            // TODO: double check what happen if index is odd number
-            index = index / 2;
+            // TODO: handle cases where index is larger than the length of final polynomial (needs to wrap around)
         }
 
         proofs
@@ -142,22 +141,19 @@ impl<E: PrimeField> FRI<E> {
 
     // TODO: complete verification function
     pub fn verify(&self, proofs: Vec<RoundProof<E>>) -> bool {
-        let mut i = 0;
-        for proof in proofs {
+        for (proof, commitment) in proofs.iter().zip(self.verifier.commitments.iter()) {
             // verify that the evaluation point matches the merkle commitment
-            let merkle_root = reconstruct_merkle_root(proof.f_g, proof.merkle_path);
-            if merkle_root != self.verifier.commitments[i] {
+            let merkle_root = reconstruct_merkle_root(proof.f_g, &proof.merkle_path);
+            if &merkle_root != commitment {
                 return false;
             }
 
             // verify that the evaluation point matches the previous round
-            if i == 0 {
-                continue;
-            } else {
-                // f1(x^2) = (x+r1)(f0(x))/2x + (r1-x)(f0(-x))/2(-x)
-            }
-
-            i += 1;
+            // if i == 0 {
+            //     continue;
+            // } else {
+            //     // f1(x^2) = (x+r1)(f0(x))/2x + (r1-x)(f0(-x))/2(-x)
+            // }
         }
 
         true
