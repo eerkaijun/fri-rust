@@ -45,7 +45,10 @@ impl<E: PrimeField> Default for Verifier<E> {
 }
 
 /// Each proof contains evaluation point at f(g), f(-g) and the merkle proof
+#[derive(Debug)]
+
 pub struct RoundProof<E: PrimeField> {
+    omega: E,
     f_g: E,
     f_negative_g: E,
     merkle_path: Vec<E>,
@@ -124,6 +127,7 @@ impl<E: PrimeField> FRI<E> {
             .zip(self.prover.merkle_trees.iter())
         {
             let proof = RoundProof {
+                omega,
                 f_g: evaluate(poly, omega),
                 f_negative_g: evaluate(poly, -omega),
                 merkle_path: merkle_tree.get_merkle_path(index),
@@ -141,6 +145,8 @@ impl<E: PrimeField> FRI<E> {
 
     // TODO: complete verification function
     pub fn verify(&self, proofs: Vec<RoundProof<E>>) -> bool {
+        let mut i = 0;
+        let mut previous_proof: Option<&RoundProof<E>> = None;
         for (proof, commitment) in proofs.iter().zip(self.verifier.commitments.iter()) {
             // verify that the evaluation point matches the merkle commitment
             let merkle_root = reconstruct_merkle_root(proof.f_g, &proof.merkle_path);
@@ -148,12 +154,25 @@ impl<E: PrimeField> FRI<E> {
                 return false;
             }
 
-            // verify that the evaluation point matches the previous round
-            // if i == 0 {
-            //     continue;
-            // } else {
-            //     // f1(x^2) = (x+r1)(f0(x))/2x + (r1-x)(f0(-x))/2(-x)
-            // }
+            // TODO: clean this up, we might need to check the final commitment value too
+            match previous_proof {
+                Some(prev_round) => {
+                    // f1(x^2) = (x+r1)(f0(x))/2x + (r1-x)(f0(-x))/2(-x)
+                    if proof.f_g
+                        != (prev_round.omega + self.verifier.random_values[i]) * (prev_round.f_g)
+                            / (E::from(2) * prev_round.omega)
+                            + (self.verifier.random_values[i] - prev_round.omega)
+                                * (prev_round.f_negative_g)
+                                / (E::from(2) * -prev_round.omega)
+                    {
+                        return false;
+                    }
+                }
+                None => {},
+            }
+
+            previous_proof = Some(proof);
+            i += 1;
         }
 
         true
