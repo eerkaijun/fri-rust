@@ -159,9 +159,9 @@ impl<E: PrimeField> FRI<E> {
                 Some(prev_round) => {
                     // f1(x^2) = (x+r1)(f0(x))/2x + (r1-x)(f0(-x))/2(-x)
                     if proof.f_g
-                        != (prev_round.omega + self.verifier.random_values[i]) * (prev_round.f_g)
+                        != (prev_round.omega + self.verifier.random_values[i-1]) * (prev_round.f_g)
                             / (E::from(2) * prev_round.omega)
-                            + (self.verifier.random_values[i] - prev_round.omega)
+                            + (self.verifier.random_values[i-1] - prev_round.omega)
                                 * (prev_round.f_negative_g)
                                 / (E::from(2) * -prev_round.omega)
                     {
