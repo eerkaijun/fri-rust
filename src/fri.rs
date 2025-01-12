@@ -154,25 +154,44 @@ impl<E: PrimeField> FRI<E> {
                 return false;
             }
 
-            // TODO: clean this up, we might need to check the final commitment value too
+            // check that the evaluation matches the evaluations of previous round
             match previous_proof {
                 Some(prev_round) => {
                     // f1(x^2) = (x+r1)(f0(x))/2x + (r1-x)(f0(-x))/2(-x)
                     if proof.f_g
-                        != (prev_round.omega + self.verifier.random_values[i-1]) * (prev_round.f_g)
+                        != (prev_round.omega + self.verifier.random_values[i - 1])
+                            * (prev_round.f_g)
                             / (E::from(2) * prev_round.omega)
-                            + (self.verifier.random_values[i-1] - prev_round.omega)
+                            + (self.verifier.random_values[i - 1] - prev_round.omega)
                                 * (prev_round.f_negative_g)
                                 / (E::from(2) * -prev_round.omega)
                     {
                         return false;
                     }
                 }
-                None => {},
+                None => {}
             }
 
             previous_proof = Some(proof);
             i += 1;
+        }
+
+        // check final plaintext commitment value
+        let final_round = previous_proof.expect("final round proof must exist");
+        let final_commitment = self
+            .verifier
+            .commitments
+            .last()
+            .expect("final commitment must exist")
+            .to_owned();
+        if final_commitment
+            != (final_round.omega + self.verifier.random_values[i - 1]) * (final_round.f_g)
+                / (E::from(2) * final_round.omega)
+                + (self.verifier.random_values[i - 1] - final_round.omega)
+                    * (final_round.f_negative_g)
+                    / (E::from(2) * -final_round.omega)
+        {
+            return false;
         }
 
         true
