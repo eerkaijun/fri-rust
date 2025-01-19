@@ -64,6 +64,9 @@ impl<E: PrimeField> FRI<E> {
     }
 
     pub fn commit(&mut self, mut poly: Vec<E>, random_values: Vec<E>) -> Vec<E> {
+        // for a polynomial with length 2^n, it requires folding n times to get to a plaintext
+        assert_eq!(2u32.pow(random_values.len() as u32), poly.len() as u32);
+
         // vector that stores the commitment at each round
         let mut commitments: Vec<E> = vec![];
 
@@ -88,7 +91,6 @@ impl<E: PrimeField> FRI<E> {
             polys.push(poly.clone());
             merkle_trees.push(merkle_tree);
 
-            // TODO: better error handling if random_values length is insufficient
             poly = fold_polynomial(&poly, random_values[random_value_idx]);
             random_value_idx += 1;
             // evaluation points for the next round are used using the square of current roots of unity point
@@ -106,7 +108,6 @@ impl<E: PrimeField> FRI<E> {
         };
 
         // verifier stores the information needed
-        // TODO: move this somewhere else
         self.verifier = Verifier {
             random_values,
             commitments: commitments.clone(),
@@ -115,7 +116,7 @@ impl<E: PrimeField> FRI<E> {
         commitments
     }
 
-    pub fn query(&self, index: u64) -> Vec<RoundProof<E>> {
+    pub fn query(&self, mut index: u64) -> Vec<RoundProof<E>> {
         // when verifier passes the prover with an evaluation point (a point within the roots of unity)
         // the prover sends the proof for each round to the verifier
         let mut proofs = vec![];
@@ -126,6 +127,12 @@ impl<E: PrimeField> FRI<E> {
             .iter()
             .zip(self.prover.merkle_trees.iter())
         {
+            // handle cases where index is larger than the length of polynomial (needs to wrap around)
+            if index >= poly.len() as u64 {
+                index = index % poly.len() as u64;
+            }
+
+            // generate proof
             let proof = RoundProof {
                 omega,
                 f_g: evaluate(poly, omega),
@@ -137,13 +144,11 @@ impl<E: PrimeField> FRI<E> {
 
             // square the omega
             omega = omega.pow([2]);
-            // TODO: handle cases where index is larger than the length of final polynomial (needs to wrap around)
         }
 
         proofs
     }
 
-    // TODO: complete verification function
     pub fn verify(&self, proofs: Vec<RoundProof<E>>) -> bool {
         let mut i = 0;
         let mut previous_proof: Option<&RoundProof<E>> = None;
