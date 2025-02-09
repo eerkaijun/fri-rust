@@ -2,7 +2,7 @@
 
 This is a Rust implementation of the FRI polynomial commitment scheme.
 
-`fri.rs` implements the fri protocol. Basic explanation [here](https://kaijuneer.medium.com/fri-polynomial-commitment-with-code-walkthrough-ca5e4b4b2b3d).
+`fri.rs` implements the FRI protocol. Basic explanation [here](https://kaijuneer.medium.com/fri-polynomial-commitment-with-code-walkthrough-ca5e4b4b2b3d).
 
 ### Getting Started
 
